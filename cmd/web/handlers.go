@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"text/template"
 )
 
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
 	// Initialize a slice containing the paths to the two files:
@@ -21,7 +20,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Print(err.Error())
+		app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -29,12 +28,9 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// The last parameter to `Execute()` represents any dynamic data we want to pass in.
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		log.Print(err.Error())
+		app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
-
-
-
 
 	// w.Header().Set("Content-Type", "application/json")
 	// w.Write([]byte(`{"Server": "Go"}`))
@@ -42,7 +38,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func memoView(w http.ResponseWriter, r *http.Request) {
+func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi((r.PathValue("id")))
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
@@ -53,11 +49,11 @@ func memoView(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(msg))
 }
 
-func memoCreate(w http.ResponseWriter, r *http.Request) {
+func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display a form for creating a new memo..."))
 }
 
-func memoCreatePost(w http.ResponseWriter, r *http.Request) {
+func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Create a new memo..."))
 }
