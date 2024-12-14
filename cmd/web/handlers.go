@@ -56,6 +56,16 @@ func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Create a new memo..."))
+	// Dummy data for now.
+	title := "TypeScript"
+	content := "JS with types, enhancing safety for large-scale applications."
+	expires := 1
+	id, err := app.memos.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// Redirect the user to the relevant page for the memo.
+	http.Redirect(w, r, fmt.Sprintf("/memo/view/%d", id), http.StatusSeeOther)
 }

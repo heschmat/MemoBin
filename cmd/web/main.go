@@ -7,12 +7,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/heschmat/MemoBin/internal/models" // {project-model-path}/internal/models
+
 	_ "github.com/go-sql-driver/mysql" // added manually
 )
 
 // Define an application struct to hold the application-wide dependencies.
 type application struct {
 	logger *slog.Logger
+	memos  *models.MemoModel // `MemoModel` will be available to our handlers.
 }
 
 
@@ -45,6 +48,8 @@ func main() {
 	// Initialize a new instance of the `application` struct, containing the dependencies:
 	app := &application{
 		logger: logger,
+		// Initialize a `models.MemoModel` instance containing the connection pool.
+		memos:  &models.MemoModel{DB: db},
 	}
 
 	mux := http.NewServeMux()
