@@ -106,3 +106,26 @@ pwd # this should be `memobin` (your root project directory)
 go get github.com/go-sql-driver/mysql@v1
 
 ```
+
+
+# go mod
+```sh
+# To download the exact versions of all the packages that your project needs.
+go mod download
+
+# To ensure that nothing in the downloaded packages has been changed unexpectedly.
+go mod verify
+
+# To upgrade to latest available `minor` or `patch` release of a package
+go get -u github.com/foo/bar
+
+# To upgrade to a specific version
+go get -u github.com/foo/bar@v3.2.1
+
+# Removing unused packages -------------------
+go get github.com/foo/bar@none
+
+# or:
+go mod tidy # automatically removes any unused packages from `go.mod` and `go.sum` files.
+```
+

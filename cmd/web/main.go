@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log/slog"
 	"net/http"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql" // added manually
 )
 
 // Define an application struct to hold the application-wide dependencies.
@@ -16,6 +19,9 @@ type application struct {
 func main() {
 	// The value of the flag will be stored in the `addr` variable at runtime.
 	addr := flag.String("addr", ":4000", "HTTP network address")
+	// Define a new command-line flag for the MySQL DSN string.
+	dsn := flag.String("dsn", "web:changeme@/memobin?parseTime=true", "MySQL data source name")
+
 	// If any errors are encountered during parsing, the application will be terminated.
 	flag.Parse()
 
@@ -25,6 +31,16 @@ func main() {
 		Level: slog.LevelDebug, // min log level
 		AddSource: true, // record caller location (under `source` key)
 	}))
+
+	// Pass openDB() the DSN from the cl-flag:
+	db, err := openDB(*dsn)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	// So that the connection pool is closed before the main() exits.
+	defer db.Close()
 
 	// Initialize a new instance of the `application` struct, containing the dependencies:
 	app := &application{
@@ -45,7 +61,27 @@ func main() {
 
 	// The value returned from the flag.String() function is a pointer to the flag value.
 	logger.Info("Starting serve", "addr", *addr)
-	err := http.ListenAndServe(*addr, mux)
+	err = http.ListenAndServe(*addr, mux)
 	logger.Error(err.Error())
 	os.Exit(1)
+}
+
+
+// openDB() wraps sql.Open()
+// and returns a sql.DB connection pool for a given DSN.
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verfiy everything is setup correctly.
+	// db.Ping() creates a connection and checks for any error.
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }
