@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"text/template"
+
+	"github.com/heschmat/MemoBin/internal/models"
 )
 
 
@@ -47,8 +50,19 @@ func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := fmt.Sprintf("Display a specific memo with ID %d...", id)
-	w.Write([]byte(msg))
+	memo, err := app.memos.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			// If no matching record is found, return a 404 Not Found response.
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	// Write the *memo* data as a plain-text HTTP response body.
+	fmt.Fprintf(w, "%+v", memo)
 }
 
 func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {

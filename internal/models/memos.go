@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -19,7 +20,29 @@ type MemoModel struct {
 	DB      *sql.DB
 }
 
-// Insert
+// GET memo/{id}
+func (m *MemoModel) Get(id int) (Memo, error) {
+	query := `SELECT id, title, content, created, expires FROM memos
+	WHERE expires > UTC_TIMESTAMP() AND id = ?;`
+
+	// Returns a pointer to a `sql.Row` object, which holds the result.
+	row := m.DB.QueryRow(query, id)
+
+	var memo Memo // Initialize a new zeroed Memo struct.
+
+	err := row.Scan(&memo.ID, &memo.Title, &memo.Content, &memo.Created, &memo.Expires)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Memo{}, ErrNoRecord // We define `ErrNoRecord`
+		}
+		return Memo{}, err
+	}
+
+	// If everythig went OK, return the filled Memo struct.
+	return memo, nil
+}
+
+// POST
 func (m *MemoModel) Insert(title string, content string, expires int) (int, error) {
 	// Using `` we can split the query we want to execute over multiple lines for readability.
 	// N.B. PostgreSQL uses $N notation for placeholder parameter.
