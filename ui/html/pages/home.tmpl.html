@@ -2,5 +2,22 @@
 
 {{define "main"}}
     <h2>Latest Memos</h2>
+    {{if .Memos}}
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Created</th>
+            <th>ID</th>
+        </tr>
+        {{range .Memos}}
+        <tr>
+            <td><a href="/memo/view/{{.ID}}">{{.Title}}</a></td>
+            <td>{{.Created}}</td>
+            <td>#{{.ID}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
     <p>No memo yet...</p>
+    {{end}}
 {{end}}

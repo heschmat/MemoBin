@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"text/template"
 
 	"github.com/heschmat/MemoBin/internal/models"
 )
@@ -19,36 +20,37 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, memo := range memos {
-		fmt.Fprintf(w, "%+v\n", memo)
+	// Initialize a slice containing the paths to the two files:
+	files := []string {
+		"./ui/html/base.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/pages/home.tmpl.html",
 	}
 
-	// // Initialize a slice containing the paths to the two files:
-	// files := []string {
-	// 	"./ui/html/base.tmpl.html",
-	// 	"./ui/html/partials/nav.tmpl.html",
-	// 	"./ui/html/pages/home.tmpl.html",
-	// }
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
+		return
+	}
 
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-	// 	// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
+	// Create an instance of a `templateData` struct holding the slice of *memos*.
+	data := templateData {
+		Memos: memos,
+	}
 
-	// // The last parameter to `Execute()` represents any dynamic data we want to pass in.
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-	// 	// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	app.serverError(w, r, err)
-	// }
+	// The last parameter to `Execute()` represents any dynamic data we want to pass in.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
+	}
 
-	// // w.Header().Set("Content-Type", "application/json")
-	// // w.Write([]byte(`{"Server": "Go"}`))
-	// // w.Write([]byte("Welcome to MemoBin"))
+	// w.Header().Set("Content-Type", "application/json")
+	// w.Write([]byte(`{"Server": "Go"}`))
+	// w.Write([]byte("Welcome to MemoBin"))
 
 }
 
@@ -71,8 +73,30 @@ func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Write the *memo* data as a plain-text HTTP response body.
-	fmt.Fprintf(w, "%+v", memo)
+	// Initialize a slice containing the path to the view.tmpl.html file.
+	files := []string{
+		"./ui/html/base.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/pages/view.tmpl.html",
+	}
+
+	// Parse the template files...
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// Create an instance of `templateData` struct, holding the *Memo* data:
+	data := templateData {
+		Memo: memo,
+	}
+
+	// Execute. The data `a models.Memo struct` is passed as the final parameter.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {
