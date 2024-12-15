@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"text/template"
 
 	"github.com/heschmat/MemoBin/internal/models"
 )
@@ -14,32 +13,43 @@ import (
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
-	// Initialize a slice containing the paths to the two files:
-	files := []string {
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-		"./ui/html/pages/home.tmpl.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
+	memos, err := app.memos.Latest()
 	if err != nil {
-		// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		app.serverError(w, r, err)
 		return
 	}
 
-	// The last parameter to `Execute()` represents any dynamic data we want to pass in.
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
-		// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		app.serverError(w, r, err)
+	for _, memo := range memos {
+		fmt.Fprintf(w, "%+v\n", memo)
 	}
 
-	// w.Header().Set("Content-Type", "application/json")
-	// w.Write([]byte(`{"Server": "Go"}`))
-	// w.Write([]byte("Welcome to MemoBin"))
+	// // Initialize a slice containing the paths to the two files:
+	// files := []string {
+	// 	"./ui/html/base.tmpl.html",
+	// 	"./ui/html/partials/nav.tmpl.html",
+	// 	"./ui/html/pages/home.tmpl.html",
+	// }
+
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+	// 	// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
+
+	// // The last parameter to `Execute()` represents any dynamic data we want to pass in.
+	// err = ts.ExecuteTemplate(w, "base", nil)
+	// if err != nil {
+	// 	// app.logger.Error(err.Error(), "method", r.Method, "uri", r.URL.RequestURI())
+	// 	// http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	app.serverError(w, r, err)
+	// }
+
+	// // w.Header().Set("Content-Type", "application/json")
+	// // w.Write([]byte(`{"Server": "Go"}`))
+	// // w.Write([]byte("Welcome to MemoBin"))
+
 }
 
 

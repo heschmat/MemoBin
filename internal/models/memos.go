@@ -42,6 +42,43 @@ func (m *MemoModel) Get(id int) (Memo, error) {
 	return memo, nil
 }
 
+func (m *MemoModel) Latest() ([]Memo, error) {
+	query := `SELECT id, title, content, created, expires FROM memos
+	WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10;`
+
+	rows, err := m.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	// *defer* rows.Close() to ensure the sql.Rows resultset is always properly closed
+	// before Latest() method returns.
+	// N.B. This should come **after** checking for an error from the Query() method.
+	// Or you may get a **panic**.
+	defer rows.Close()
+
+	// Initialize an empty slice to hold the Memo structs.
+	var memos []Memo
+
+	for rows.Next() {
+		var m Memo
+		err = rows.Scan(&m.ID, &m.Title, &m.Content, &m.Created, &m.Expires)
+		if err != nil {
+			return nil, err
+		}
+
+		memos = append(memos, m)
+	}
+
+	// Retrieve any error that was encountered dureing the iteration.
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// If everything went OK, return the Memos slice.
+	return memos, nil
+}
+
 // POST
 func (m *MemoModel) Insert(title string, content string, expires int) (int, error) {
 	// Using `` we can split the query we want to execute over multiple lines for readability.
