@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"text/template"
 
 	"github.com/heschmat/MemoBin/internal/models" // {project-model-path}/internal/models
 
@@ -14,8 +15,9 @@ import (
 
 // Define an application struct to hold the application-wide dependencies.
 type application struct {
-	logger *slog.Logger
-	memos  *models.MemoModel // `MemoModel` will be available to our handlers.
+	logger        *slog.Logger
+	memos         *models.MemoModel // `MemoModel` will be available to our handlers.
+	templateCache map[string]*template.Template
 }
 
 
@@ -45,11 +47,20 @@ func main() {
 	// So that the connection pool is closed before the main() exits.
 	defer db.Close()
 
+	// Initialize a new template cache...
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+
 	// Initialize a new instance of the `application` struct, containing the dependencies:
 	app := &application{
-		logger: logger,
+		logger:        logger,
 		// Initialize a `models.MemoModel` instance containing the connection pool.
-		memos:  &models.MemoModel{DB: db},
+		memos:         &models.MemoModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	mux := http.NewServeMux()

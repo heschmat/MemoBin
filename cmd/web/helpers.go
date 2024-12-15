@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"runtime/debug"
 )
@@ -24,4 +25,21 @@ func (app *application) serverError (w http.ResponseWriter, r *http.Request, err
 // e.g., where there's a problem with the user's request, send responses like `400 "Bad Request`
 func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
+}
+
+
+func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
+	// Retrieve the appropriate template set from the cache base on the page name.
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("The template *%s* does not exist.", page)
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(status)
+	err := ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
