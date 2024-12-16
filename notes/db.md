@@ -92,6 +92,10 @@ INSERT INTO memos (title, content, created, expires) VALUES (
     DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY)
 );
 
+
+# Deleting records --------------------------- #
+DELETE FROM memos WHERE id BETWEEN 7 AND 10;
+
 ```
 
 ## Installing a database driver

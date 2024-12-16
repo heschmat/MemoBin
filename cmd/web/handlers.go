@@ -17,7 +17,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := app.newTemplateData()
+	data := app.newTemplateData(r)
 	data.Memos = memos
 	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
@@ -41,20 +41,32 @@ func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := app.newTemplateData()
+	data := app.newTemplateData(r)
 	data.Memo = memo
 	app.render(w, r, http.StatusOK, "view.tmpl.html", data)
 }
 
 func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display a form for creating a new memo..."))
+	data := app.newTemplateData(r)
+
+	app.render(w, r, http.StatusOK, "create.tmpl.html", data)
 }
 
 func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Dummy data for now.
-	title := "TypeScript"
-	content := "JS with types, enhancing safety for large-scale applications."
-	expires := 1
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
 	id, err := app.memos.Insert(title, content, expires)
 	if err != nil {
 		app.serverError(w, r, err)

@@ -1,0 +1,23 @@
+{{define "title"}}Create a new Memo{{end}}
+
+{{define "main"}}
+<form action="/memo/create" method="POST">
+    <div>
+        <label for="">Title:</label>
+        <input type="text" name="title" id="">
+    </div>
+    <div>
+        <label for="">Content:</label>
+        <textarea name="content" id=""></textarea>
+    </div>
+    <div>
+        <label for="">Delete in:</label>
+        <input type="radio" name="expires" value="365" id="" checked> One Year
+        <input type="radio" name="expires" value="7" id=""> One Week
+        <input type="radio" name="expires" value="1" id=""> One Day
+    </div>
+    <div>
+        <input type="submit" value="Publish Memo">
+    </div>
+</form>
+{{end}}
