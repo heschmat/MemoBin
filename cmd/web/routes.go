@@ -17,5 +17,5 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /memo/create", app.memoCreatePost)
 
 	// middlewares chain
-	return app.logRequest(commonHeaders(mux))
+	return app.recoverPanic(app.logRequest(commonHeaders(mux)))
 }
