@@ -16,5 +16,6 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /memo/create", app.memoCreate)
 	mux.HandleFunc("POST /memo/create", app.memoCreatePost)
 
-	return commonHeaders(mux)
+	// middlewares chain
+	return app.logRequest(commonHeaders(mux))
 }
