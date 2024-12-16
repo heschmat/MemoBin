@@ -3,6 +3,7 @@ package main
 import (
 	"path/filepath"
 	"text/template"
+	"time"
 
 	"github.com/heschmat/MemoBin/internal/models"
 )
@@ -11,9 +12,20 @@ import (
 // to act as the holding structure for any dynamic data
 // we want to pass to the HTML templates.
 type templateData struct {
-	Memo  models.Memo
-	Memos []models.Memo
+	CurrentYear int
+	Memo        models.Memo
+	Memos       []models.Memo
 }
+
+// YYYY-MM-DD HH:MM:SS +0000 UTC => 16 Dec 2024 at 12:21
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
+}
+
 
 func newTemplateCache() (map[string]*template.Template, error) {
 	// Initialize a new map to act as the cache.
@@ -28,18 +40,27 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		// Extract the filename from the fullpath
 		name := filepath.Base(page)
-		// Create a slice containing the filepaths for our base template, any partials and the page.
-		files := []string {
-			"./ui/html/base.tmpl.html",
-			"./ui/html/partials/nav.tmpl.html",
-			page,
-		}
 
-		// Parse the files into a template set.
-		ts, err := template.ParseFiles(files...)
+		// `template.FuncMap` must be registered with the template set before calling `.ParseFiles()`
+		// hence, 1) create an empty template set via `template.New()`
+		// 2) register the `template.FuncMap` via `.Funcs()`
+		// 3) parse the file as normal.
+		// Create a slice containing the filepaths for our base template, any partials and the page.
+		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl.html")
 		if err != nil {
 			return nil, err
 		}
+
+		ts, err = ts.ParseGlob("./ui/html/partials/*.tmpl.html")
+		if err != nil {
+			return nil, err
+		}
+
+		ts, err = ts.ParseFiles(page)
+		if err != nil {
+			return nil, err
+		}
+
 		// Add the template set to the map:
 		cache[name] = ts
 	}

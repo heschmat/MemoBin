@@ -19,9 +19,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, http.StatusOK, "home.tmpl.html", templateData{
-		Memos: memos,
-	})
+	data := app.newTemplateData()
+	data.Memos = memos
+	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
 
 
@@ -43,9 +43,9 @@ func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, http.StatusOK, "view.tmpl.html", templateData{
-		Memo: memo,
-	})
+	data := app.newTemplateData()
+	data.Memo = memo
+	app.render(w, r, http.StatusOK, "view.tmpl.html", data)
 }
 
 func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {

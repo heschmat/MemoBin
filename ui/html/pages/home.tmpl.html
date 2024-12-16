@@ -12,7 +12,7 @@
         {{range .Memos}}
         <tr>
             <td><a href="/memo/view/{{.ID}}">{{.Title}}</a></td>
-            <td>{{.Created}}</td>
+            <td>{{humanDate .Created}}</td> <!-- Use the `humanDate`, our template func-->
             <td>#{{.ID}}</td>
         </tr>
         {{end}}
