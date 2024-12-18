@@ -63,12 +63,13 @@ func main() {
 		templateCache: templateCache,
 	}
 
-	// mux := app.routes()
-
 	// Initialize a new `http.Server` struct.
 	srv := &http.Server{
 		Addr:    *addr,
 		Handler: app.routes(),
+		// Create a *log.Logger* from our standard logger handler.
+		// This writes log entries at Error level.
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	// The value returned from the flag.String() function is a pointer to the flag value.
