@@ -63,11 +63,19 @@ func main() {
 		templateCache: templateCache,
 	}
 
-	mux := app.routes()
+	// mux := app.routes()
+
+	// Initialize a new `http.Server` struct.
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+	}
 
 	// The value returned from the flag.String() function is a pointer to the flag value.
 	logger.Info("Starting serve", "addr", *addr)
-	err = http.ListenAndServe(*addr, mux)
+
+	// Call the `.ListenAndServe()` method on the `http.Server` struct to start the server:
+	err = srv.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }
