@@ -69,6 +69,10 @@ func (app *application) memoCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
+	// Limit the request body size to 4096 bytes.
+	r.Body = http.MaxBytesReader(w, r.Body, 4096)
+	// if the limit above is hit, `MaxBytesreader` sets a flag on *http.ResponseWriter*
+	// which instructs the server to close the underlying TCP connection.
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
