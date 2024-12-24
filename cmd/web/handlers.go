@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/form/v4"
 	"github.com/heschmat/MemoBin/internal/models"
 	"github.com/heschmat/MemoBin/internal/validator"
 )
@@ -14,10 +15,12 @@ import (
 // in order to be ready by the html/template package when rendering the template.
 // This does NOT apply to maps, though.
 type memoCreateForm struct {
-	Title                string
-	Content              string
-	Expires              int
-	validator.Validator
+	// Include struct tags: tell the decoder how to map HTML form values into struct fields.
+	// e.g., name "title" in the form matches with field "Title" in the struct.
+	Title                string `form:"title"`
+	Content              string `form:"content"`
+	Expires              int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -79,17 +82,27 @@ func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the `expires` value from the *form* as normal.
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	// // Get the `expires` value from the *form* as normal.
+	// expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	// if err != nil {
+	// 	app.clientError(w, http.StatusBadRequest)
+	// 	return
+	// }
+
+	// form := memoCreateForm {
+	// 	Title: r.PostForm.Get("title"),
+	// 	Content: r.PostForm.Get("content"),
+	// 	Expires: expires,
+	// }
+
+	var form memoCreateForm
+	// The follwoing will essentially fill the struct with the relevant values fro the HTML form.
+	// N.B. Type conversions are handled automatically too.
+	err = app.formDecoder.Decode(&form, r.PostForm)
 	if err != nil {
+		// If there's a problem, return a 400 Bad Request response to the client.
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	form := memoCreateForm {
-		Title: r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
 	}
 
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
@@ -115,4 +128,27 @@ func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	// Redirect the user to the relevant page for the memo.
 	http.Redirect(w, r, fmt.Sprintf("/memo/view/%d", id), http.StatusSeeOther)
+}
+
+// A helper method to decode form data:
+// `dst`: target destination that we want to decode the form data into.
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		// If we try to use an invalid target destination,
+		// the `Decode()` method will return an error with the type *form.InvalidDecoderError.
+		var invalidDecoderErr *form.InvalidDecoderError
+
+		if errors.As(err, &invalidDecoderErr) {
+			panic(err)
+		}
+		// For all other errors, we return them as normal:
+		return err
+	}
+	return nil
 }

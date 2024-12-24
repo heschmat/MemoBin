@@ -8,6 +8,7 @@ import (
 	"os"
 	"text/template"
 
+	"github.com/go-playground/form/v4"            // automatic form parsing
 	"github.com/heschmat/MemoBin/internal/models" // {project-model-path}/internal/models
 
 	_ "github.com/go-sql-driver/mysql" // added manually
@@ -18,6 +19,7 @@ type application struct {
 	logger        *slog.Logger
 	memos         *models.MemoModel // `MemoModel` will be available to our handlers.
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder  // holds a pointer to a `form.Decoder` instance
 }
 
 
@@ -61,6 +63,8 @@ func main() {
 		// Initialize a `models.MemoModel` instance containing the connection pool.
 		memos:         &models.MemoModel{DB: db},
 		templateCache: templateCache,
+		// Initialize a decoder instance & add it to the application dependencies:
+		formDecoder: form.NewDecoder(),
 	}
 
 	// Initialize a new `http.Server` struct.
