@@ -14,11 +14,18 @@ func (app *application) routes() http.Handler {
 	// Register the `fileServer` as the handler for all URL paths starting with '/static/'
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	// Register the other application routes
-	mux.HandleFunc("GET /{$}", app.home) // Restrict the route to exact matches on / only
-	mux.HandleFunc("GET /memo/view/{id}", app.memoView)
-	mux.HandleFunc("GET /memo/create", app.memoCreate)
-	mux.HandleFunc("POST /memo/create", app.memoCreatePost)
+	// We leave the static files route unchanged.
+	// Create a new middleware chain containing the middleware specific to our dynamic application routes.
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
+
+	// Update the routes to use the `dynamic` middleware chain,
+	// followed by the appropriate handler function.
+	// N.B. the alice `ThenFunc()` method returns a `http.Handler` (rather than a `http.HandlerFunc`)
+	// Registering the other application routes
+	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home)) // Restrict the route to exact matches on / only
+	mux.Handle("GET /memo/view/{id}", dynamic.ThenFunc(app.memoView))
+	mux.Handle("GET /memo/create", dynamic.ThenFunc(app.memoCreate))
+	mux.Handle("POST /memo/create", dynamic.ThenFunc(app.memoCreatePost))
 
 	// middlewares chain
 	// return app.recoverPanic(app.logRequest(commonHeaders(mux)))

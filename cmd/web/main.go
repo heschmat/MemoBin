@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"            // automatic form parsing
 	"github.com/heschmat/MemoBin/internal/models" // {project-model-path}/internal/models
 
@@ -20,6 +23,7 @@ type application struct {
 	memos         *models.MemoModel // `MemoModel` will be available to our handlers.
 	templateCache map[string]*template.Template
 	formDecoder   *form.Decoder  // holds a pointer to a `form.Decoder` instance
+	sessionManager *scs.SessionManager
 }
 
 
@@ -57,6 +61,14 @@ func main() {
 	}
 
 
+	// scs.New() returns a pointer to `SessionManager` struct
+	// This holds the configuration settings for sessions.
+	sessionManager := scs.New()
+	// Configure `sessionManager` to use our MySQL database as the session store.
+	sessionManager.Store = mysqlstore.New(db)
+	// Set a lifetime of 12 hours; sessions automatically expire 12H after being created.
+	sessionManager.Lifetime = 12 * time.Hour
+
 	// Initialize a new instance of the `application` struct, containing the dependencies:
 	app := &application{
 		logger:        logger,
@@ -65,6 +77,7 @@ func main() {
 		templateCache: templateCache,
 		// Initialize a decoder instance & add it to the application dependencies:
 		formDecoder: form.NewDecoder(),
+		sessionManager: sessionManager,
 	}
 
 	// Initialize a new `http.Server` struct.

@@ -53,13 +53,6 @@ INSERT INTO memos (title, content, created, expires) VALUES (
     DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY)
 );
 
-INSERT INTO memos (title, content, created, expires) VALUES (
-    'Rust',
-    'Safe, efficient, perfect for systems programming and performance.',
-    UTC_TIMESTAMP(),
-    DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY)
-);
-
 # Check user:
 SELECT User, Host FROM mysql.user;
 SELECT User, Host FROM mysql.user WHERE User = 'web' AND Host = 'localhost';
@@ -111,6 +104,30 @@ go get github.com/go-sql-driver/mysql@v1
 
 ```
 
+## Setting up the session manager
+```sh
+sudo mysql;
+
+USE memobin;
+show tables;
+
+SELECT user; # should be `root@localhost`
+
+# `web@localhost` does NOT have the privilege to create table;
+CREATE TABLE sessions (
+    token CHAR(43) PRIMARY KEY,
+    data BLOB NOT NULL,
+    expiry TIMESTAMP(6) NOT NULL
+);
+
+CREATE INDEX sessions_expiry_idx ON sessions (expiry);
+
+```
+token: a unique, randomly-generated, identifier for each session.
+
+data: the actual session data we want to share between HTTP requests. (BLOB: binary large object)
+
+expiry: expiry time for the session
 
 # go mod
 ```sh
