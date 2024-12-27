@@ -54,8 +54,11 @@ func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	flash := app.sessionManager.PopString(r.Context(), "flash")
+
 	data := app.newTemplateData(r)
 	data.Memo = memo
+	data.Flash = flash // pass the `flash` message to the template
 	app.render(w, r, http.StatusOK, "view.tmpl.html", data)
 }
 
@@ -126,6 +129,11 @@ func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
+
+	// Add as string key:value - "flash":"Memo created successfully" to the session data.
+	// if - and only if - the *memo* is created successfully.
+	app.sessionManager.Put(r.Context(), "flash", "Memo created successfully.")
+
 	// Redirect the user to the relevant page for the memo.
 	http.Redirect(w, r, fmt.Sprintf("/memo/view/%d", id), http.StatusSeeOther)
 }

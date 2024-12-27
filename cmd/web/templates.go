@@ -16,6 +16,7 @@ type templateData struct {
 	Memo        models.Memo
 	Memos       []models.Memo
 	Form        any
+	Flash       string
 }
 
 // YYYY-MM-DD HH:MM:SS +0000 UTC => 16 Dec 2024 at 12:21
