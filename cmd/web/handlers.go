@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-playground/form/v4"
 	"github.com/heschmat/MemoBin/internal/models"
 	"github.com/heschmat/MemoBin/internal/validator"
 )
@@ -138,25 +137,25 @@ func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/memo/view/%d", id), http.StatusSeeOther)
 }
 
-// A helper method to decode form data:
-// `dst`: target destination that we want to decode the form data into.
-func (app *application) decodePostForm(r *http.Request, dst any) error {
-	err := r.ParseForm()
-	if err != nil {
-		return err
-	}
+// // A helper method to decode form data:
+// // `dst`: target destination that we want to decode the form data into.
+// func (app *application) decodePostForm(r *http.Request, dst any) error {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = app.formDecoder.Decode(dst, r.PostForm)
-	if err != nil {
-		// If we try to use an invalid target destination,
-		// the `Decode()` method will return an error with the type *form.InvalidDecoderError.
-		var invalidDecoderErr *form.InvalidDecoderError
+// 	err = app.formDecoder.Decode(dst, r.PostForm)
+// 	if err != nil {
+// 		// If we try to use an invalid target destination,
+// 		// the `Decode()` method will return an error with the type *form.InvalidDecoderError.
+// 		var invalidDecoderErr *form.InvalidDecoderError
 
-		if errors.As(err, &invalidDecoderErr) {
-			panic(err)
-		}
-		// For all other errors, we return them as normal:
-		return err
-	}
-	return nil
-}
+// 		if errors.As(err, &invalidDecoderErr) {
+// 			panic(err)
+// 		}
+// 		// For all other errors, we return them as normal:
+// 		return err
+// 	}
+// 	return nil
+// }
