@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/form/v4"
 	"github.com/heschmat/MemoBin/internal/models"
 	"github.com/heschmat/MemoBin/internal/validator"
 )
@@ -19,6 +20,14 @@ type memoCreateForm struct {
 	Title                string `form:"title"`
 	Content              string `form:"content"`
 	Expires              int    `form:"expires"`
+	validator.Validator `form:"-"`
+}
+
+// Hold the form data for user auth:
+type userSignupForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
 	validator.Validator `form:"-"`
 }
 
@@ -140,11 +149,39 @@ func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 // ============================================================================== #
 // User Authentication
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display a form for signing up a new user...")
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, r, http.StatusOK, "signup.tmpl.html", data)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Create a new user...")
+	// Declare a zero-valued instance of *userSignupForm* struct.
+	var form userSignupForm
+
+	// Parse the form data.
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+
+	// Validate the form.
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+
+	// In case of error, redisplay the signup form along with a 422 status code.
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+		return
+	}
+
+	// Otherwise send the placeholder response (FOR NOW!!!)
+	fmt.Fprintln(w, "Creating a new user...")
+
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
@@ -154,25 +191,25 @@ func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 
 // ============================================================================== #
 
-// // A helper method to decode form data:
-// // `dst`: target destination that we want to decode the form data into.
-// func (app *application) decodePostForm(r *http.Request, dst any) error {
-// 	err := r.ParseForm()
-// 	if err != nil {
-// 		return err
-// 	}
+// A helper method to decode form data:
+// `dst`: target destination that we want to decode the form data into.
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
 
-// 	err = app.formDecoder.Decode(dst, r.PostForm)
-// 	if err != nil {
-// 		// If we try to use an invalid target destination,
-// 		// the `Decode()` method will return an error with the type *form.InvalidDecoderError.
-// 		var invalidDecoderErr *form.InvalidDecoderError
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		// If we try to use an invalid target destination,
+		// the `Decode()` method will return an error with the type *form.InvalidDecoderError.
+		var invalidDecoderErr *form.InvalidDecoderError
 
-// 		if errors.As(err, &invalidDecoderErr) {
-// 			panic(err)
-// 		}
-// 		// For all other errors, we return them as normal:
-// 		return err
-// 	}
-// 	return nil
-// }
+		if errors.As(err, &invalidDecoderErr) {
+			panic(err)
+		}
+		// For all other errors, we return them as normal:
+		return err
+	}
+	return nil
+}
