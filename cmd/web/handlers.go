@@ -137,6 +137,23 @@ func (app *application) memoCreatePost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/memo/view/%d", id), http.StatusSeeOther)
 }
 
+// ============================================================================== #
+// User Authentication
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Display a form for signing up a new user...")
+}
+
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Create a new user...")
+}
+
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Display a form for logging in a user...")
+
+}
+
+// ============================================================================== #
+
 // // A helper method to decode form data:
 // // `dst`: target destination that we want to decode the form data into.
 // func (app *application) decodePostForm(r *http.Request, dst any) error {

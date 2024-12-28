@@ -27,6 +27,11 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /memo/create", dynamic.ThenFunc(app.memoCreate))
 	mux.Handle("POST /memo/create", dynamic.ThenFunc(app.memoCreatePost))
 
+	// User auth routes ---------------------------------------------- //
+	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
+	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
+	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
+
 	// middlewares chain
 	// return app.recoverPanic(app.logRequest(commonHeaders(mux)))
 
