@@ -19,11 +19,12 @@ import (
 
 // Define an application struct to hold the application-wide dependencies.
 type application struct {
-	logger        *slog.Logger
-	memos         *models.MemoModel // `MemoModel` will be available to our handlers.
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder  // holds a pointer to a `form.Decoder` instance
+	logger         *slog.Logger
+	memos          *models.MemoModel // `MemoModel` will be available to our handlers.
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder  // holds a pointer to a `form.Decoder` instance
 	sessionManager *scs.SessionManager
+	users          *models.UserModel
 }
 
 
@@ -71,13 +72,14 @@ func main() {
 
 	// Initialize a new instance of the `application` struct, containing the dependencies:
 	app := &application{
-		logger:        logger,
+		logger:         logger,
 		// Initialize a `models.MemoModel` instance containing the connection pool.
-		memos:         &models.MemoModel{DB: db},
-		templateCache: templateCache,
+		memos:          &models.MemoModel{DB: db},
+		templateCache:  templateCache,
 		// Initialize a decoder instance & add it to the application dependencies:
-		formDecoder: form.NewDecoder(),
+		formDecoder:    form.NewDecoder(),
 		sessionManager: sessionManager,
+		users:          &models.UserModel{DB: db},
 	}
 
 	// Initialize a new `http.Server` struct.

@@ -129,6 +129,25 @@ data: the actual session data we want to share between HTTP requests. (BLOB: bin
 
 expiry: expiry time for the session
 
+
+## Setting up the User Model
+```sh
+# Login as the `root` user;
+sudo mysql;
+
+USE memobin;
+
+CREATE TABLE users (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    hashed_password CHAR(60) NOT NULL,
+    created DATETIME NOT NULL
+);
+
+ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);
+```
+
 # go mod
 ```sh
 # To download the exact versions of all the packages that your project needs.
