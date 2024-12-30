@@ -31,6 +31,12 @@ type userSignupForm struct {
 	validator.Validator `form:"-"`
 }
 
+type userLoginForm struct {
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	memos, err := app.memos.Latest()
 	if err != nil {
@@ -203,8 +209,61 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Display a form for logging in a user...")
+	data := app.newTemplateData(r)
+	data.Form = userLoginForm{}
+	app.render(w, r, http.StatusOK, "login.tmpl.html", data)
+}
 
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	// Decode & hold the form data.
+	var form userLoginForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Email), "email", "email is mandatory")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "enter a valid email address")
+	form.CheckField(validator.NotBlank(form.Password), "password", "password is mandatory")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl.html", data)
+		return
+	}
+
+	// Verify if the credentials are valid.
+	id, err := app.users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email/Password don't match")
+
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnsupportedMediaType, "login.tmpl.html", data)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	// N.B. It's a good practice to generate a new session ID
+	// when the authentication state or privilege levels changes for the user
+	// (e.g., login and logout operations)
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// Add the ID of the current user to the session, so that they're now `logged in`
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+	// Redirect the user to create a memo.
+	http.Redirect(w, r, "/memo/create", http.StatusSeeOther)
 }
 
 // ============================================================================== #
