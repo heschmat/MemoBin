@@ -266,6 +266,24 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/memo/create", http.StatusSeeOther)
 }
 
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	// Change the session ID again, as the state changes.
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// User is `logged out`, remove the *authenticatedUserID from the session data.
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+
+	// Add a flash message to the session,
+	// to confirm to the user that they've been logged out.
+	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 // ============================================================================== #
 
 // A helper method to decode form data:
