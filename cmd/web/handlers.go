@@ -68,11 +68,12 @@ func (app *application) memoView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flash := app.sessionManager.PopString(r.Context(), "flash")
+	// No need anymore; we auto-display the flash msg. => helpers.go -> newTemplateData()
+	// flash := app.sessionManager.PopString(r.Context(), "flash")
 
 	data := app.newTemplateData(r)
 	data.Memo = memo
-	data.Flash = flash // pass the `flash` message to the template
+	// data.Flash = flash // pass the `flash` message to the template
 	app.render(w, r, http.StatusOK, "view.tmpl.html", data)
 }
 
