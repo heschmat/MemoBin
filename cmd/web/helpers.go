@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/justinas/nosurf"
 )
 
 // `serverError` helper writes a log entry at Error level
@@ -59,5 +61,6 @@ func (app *application) newTemplateData(r *http.Request) templateData {
 		// Add the flash message to the template data, if one exists.
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken: nosurf.Token(r),
 	}
 }

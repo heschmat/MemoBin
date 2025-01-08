@@ -18,6 +18,7 @@ type templateData struct {
 	Form        any
 	Flash       string
 	IsAuthenticated bool
+	CSRFToken    string
 }
 
 // YYYY-MM-DD HH:MM:SS +0000 UTC => 16 Dec 2024 at 12:21
