@@ -37,6 +37,13 @@ type userLoginForm struct {
 	validator.Validator `form:"-"`
 }
 
+
+// Test handler to introduce **testing HTTP handlers**
+// ping() handler returns a `200 OK` status code & a string response body "OK"
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	memos, err := app.memos.Latest()
 	if err != nil {
