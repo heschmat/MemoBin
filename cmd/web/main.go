@@ -19,6 +19,7 @@ import (
 
 // Define an application struct to hold the application-wide dependencies.
 type application struct {
+	debug          bool
 	logger         *slog.Logger
 	memos          *models.MemoModel // `MemoModel` will be available to our handlers.
 	templateCache  map[string]*template.Template
@@ -33,6 +34,8 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// Define a new command-line flag for the MySQL DSN string.
 	dsn := flag.String("dsn", "web:changeme@/memobin?parseTime=true", "MySQL data source name")
+
+	debug := flag.Bool("debug", true, "Enable debug mode")
 
 	// If any errors are encountered during parsing, the application will be terminated.
 	flag.Parse()
@@ -72,6 +75,7 @@ func main() {
 
 	// Initialize a new instance of the `application` struct, containing the dependencies:
 	app := &application{
+		debug:          *debug,
 		logger:         logger,
 		// Initialize a `models.MemoModel` instance containing the connection pool.
 		memos:          &models.MemoModel{DB: db},
