@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"text/template"
 	"time"
 
@@ -41,11 +42,36 @@ func main() {
 	flag.Parse()
 
 	// Initialize a new structured logger.
+	// v1:
 	// logger := slog.New(slog.NewTextHandler(os.Stdout, nil))  // default settings
+
+	// v2:
+	// logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	// 	Level: slog.LevelDebug, // min log level
+	// 	AddSource: true, // record caller location (under `source` key)
+	// }))
+
+	// v3: use relative pass for `source`
+	appDir, _ := os.Getwd()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug, // min log level
-		AddSource: true, // record caller location (under `source` key)
-	}))
+		Level: slog.LevelDebug,
+        AddSource: true,
+        ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+            if a.Key == slog.SourceKey {
+                source := a.Value.Any().(*slog.Source)
+                // Convert absolute path to relative path
+                relPath, err := filepath.Rel(appDir, source.File)
+                if err == nil {
+                    // Return a new source with relative path
+                    return slog.Any(slog.SourceKey, &slog.Source{
+                        File: relPath,
+                        Line: source.Line,
+                    })
+                }
+            }
+            return a
+        },
+    }))
 
 	// Pass openDB() the DSN from the cl-flag:
 	db, err := openDB(*dsn)
